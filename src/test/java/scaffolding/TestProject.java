@@ -19,7 +19,7 @@ import static scaffolding.Photocopier.copyTestProjectToTemporaryLocation;
 public class TestProject {
 
     private static final MvnRunner defaultRunner = new MvnRunner(null);
-    private static final String PLUGIN_VERSION_FOR_TESTS = "3.0-SNAPSHOT";
+    private static final String PLUGIN_VERSION_FOR_TESTS = "3.1-SNAPSHOT";
 
     public final File originDir;
     public final Git origin;

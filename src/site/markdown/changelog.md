@@ -1,6 +1,10 @@
 Changelog
 ---------
 
+### 3.1.0
+
+* Enable snapshot dependencies where dependencies are managed by _releaser_ itself (or in a similar manner), cf. [#38](https://github.com/danielflower/multi-module-maven-release-plugin/issues/38)
+
 ### 3.0.0
 
 * Update JGit to 4.7.0 to ensure changed files are detected for projects

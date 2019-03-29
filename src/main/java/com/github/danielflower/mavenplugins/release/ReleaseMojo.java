@@ -1,13 +1,23 @@
 package com.github.danielflower.mavenplugins.release;
 
+import org.apache.maven.artifact.factory.ArtifactFactory;
+import org.apache.maven.artifact.metadata.ArtifactMetadataSource;
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.settings.io.DefaultSettingsWriter;
+import org.apache.maven.shared.invoker.DefaultInvocationRequest;
+import org.apache.maven.shared.invoker.DefaultInvoker;
+import org.apache.maven.shared.invoker.InvocationRequest;
+import org.apache.maven.shared.invoker.InvocationResult;
+import org.apache.maven.shared.invoker.Invoker;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
+import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -30,6 +40,18 @@ import static java.util.Arrays.asList;
     aggregator = true // the plugin should only run once against the aggregator pom
 )
 public class ReleaseMojo extends BaseMojo {
+
+    @Inject
+    private ArtifactFactory artifactFactory;
+
+    @Inject
+    private ArtifactMetadataSource artifactMetadataSource;
+
+    @Parameter(property="localRepository", required = true, readonly = true)
+    private ArtifactRepository localRepository;
+
+    @Parameter(property="project.remoteArtifactRepositories", required = true, readonly = true)
+    private List<ArtifactRepository> remoteArtifactRepositories;
 
     /**
      * <p>
@@ -72,7 +94,7 @@ public class ReleaseMojo extends BaseMojo {
      */
     @Parameter(alias = "skipTests", defaultValue = "false", property = "skipTests")
     private boolean skipTests;
-    
+
 	/**
 	 * Specifies a custom, user specific Maven settings file to be used during the release build.
      *
@@ -92,17 +114,22 @@ public class ReleaseMojo extends BaseMojo {
      */
 	@Parameter(alias = "globalSettings")
 	private File globalSettings;
-        
+
     /**
      * Push tags to remote repository as they are created.
      */
     @Parameter(alias = "pushTags", defaultValue="true", property="push")
     private boolean pushTags;
-    
+
+
+    @Parameter(property = "resolveSnapshots")
+    private List<String> resolveSnapshots;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         Log log = getLog();
+
+        log.info ("Resolving snapshots: " + resolveSnapshots);
 
         try {
             configureJsch(log);
@@ -202,8 +229,8 @@ public class ReleaseMojo extends BaseMojo {
         }
     }
 
-    private static List<File> updatePomsAndReturnChangedFiles(Log log, LocalGitRepo repo, Reactor reactor) throws MojoExecutionException, ValidationException {
-        PomUpdater pomUpdater = new PomUpdater(log, reactor);
+    private List<File> updatePomsAndReturnChangedFiles(Log log, LocalGitRepo repo, Reactor reactor) throws MojoExecutionException, ValidationException {
+        PomUpdater pomUpdater = new PomUpdater(log, reactor, artifactFactory, artifactMetadataSource, localRepository, remoteArtifactRepositories, resolveSnapshots);
         PomUpdater.UpdateResult result = pomUpdater.updateVersion();
         if (!result.success()) {
             log.info("Going to revert changes because there was an error.");
@@ -257,6 +284,63 @@ public class ReleaseMojo extends BaseMojo {
             throw new ValidationException(summary, messages);
         }
         return tags;
+    }
+
+    private void runMavenBuild(Reactor reactor) throws MojoExecutionException {
+        InvocationRequest request = new DefaultInvocationRequest();
+        request.setInteractive(false);
+
+        if (goals == null) {
+            goals = new ArrayList<String>();
+            goals.add("deploy");
+        }
+        if (skipTests) {
+            goals.add("-DskipTests=true");
+        }
+        request.setShowErrors(true);
+        request.setDebug(getLog().isDebugEnabled());
+        request.setGoals(goals);
+        List<String> profiles = profilesToActivate();
+        request.setProfiles(profiles);
+
+        request.setAlsoMake(true);
+        List<String> changedModules = new ArrayList<String>();
+        for (ReleasableModule releasableModule : reactor.getModulesInBuildOrder()) {
+            String modulePath = releasableModule.getRelativePathToModule();
+            boolean userExplicitlyWantsThisToBeReleased = modulesToRelease.contains(modulePath);
+            boolean userImplicitlyWantsThisToBeReleased = modulesToRelease == null || modulesToRelease.size() == 0;
+            if (userExplicitlyWantsThisToBeReleased || (userImplicitlyWantsThisToBeReleased && releasableModule.willBeReleased())) {
+                changedModules.add(modulePath);
+            }
+        }
+        request.setProjects(changedModules);
+
+        String profilesInfo = (profiles.size() == 0) ? "no profiles activated" : "profiles " + profiles;
+
+        getLog().info("About to run mvn " + goals + " with " + profilesInfo);
+
+        Invoker invoker = new DefaultInvoker();
+        try {
+            InvocationResult result = invoker.execute(request);
+            if (result.getExitCode() != 0) {
+                throw new MojoExecutionException("Maven execution returned code " + result.getExitCode());
+            }
+        } catch (MavenInvocationException e) {
+            throw new MojoExecutionException("Failed to build artifact", e);
+        }
+    }
+
+    private List<String> profilesToActivate() {
+        List<String> profiles = new ArrayList<String>();
+        if (releaseProfiles != null) {
+            for (String releaseProfile : releaseProfiles) {
+                profiles.add(releaseProfile);
+            }
+        }
+        for (Object activatedProfile : project.getActiveProfiles()) {
+            profiles.add(((org.apache.maven.model.Profile) activatedProfile).getId());
+        }
+        return profiles;
     }
 
 }

@@ -45,6 +45,8 @@ version of a module was released
 * A module is only released if there are changes to it
 * The release version of the pom is not committed back to the repository
 * Tests are run once by default (or optionally not at all)
+* You can have snapshot dependencies when they can be resolved to a certain release, e.g., if 1.3-SNAPSHOT can be 
+resolved to 1.3.4.
 
 Prerequisites
 -------------
