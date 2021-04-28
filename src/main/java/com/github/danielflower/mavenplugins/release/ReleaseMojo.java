@@ -98,7 +98,14 @@ public class ReleaseMojo extends BaseMojo {
      */
     @Parameter(alias = "pushTags", defaultValue="true", property="push")
     private boolean pushTags;
-    
+
+    /**
+     * <p>
+     *     Reports to generate with updated versions.
+     * </p>
+     */
+    @Parameter(alias = "versionReports")
+    private List<VersionReport> versionReports;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -132,6 +139,12 @@ public class ReleaseMojo extends BaseMojo {
             List<AnnotatedTag> proposedTags = figureOutTagNamesAndThrowIfAlreadyExists(reactor.getModulesInBuildOrder(), repo, modulesToRelease);
 
             List<File> changedFiles = updatePomsAndReturnChangedFiles(log, repo, reactor);
+
+            if (versionReports != null) {
+                for (VersionReport versionReport : versionReports) {
+                    versionReport.generateVersionReport(log, reactor.getModulesInBuildOrder());
+                }
+            }
 
             // Do this before running the maven build in case the build uploads some artifacts and then fails. If it is
             // not tagged in a half-failed build, then subsequent releases will re-use a version that is already in Nexus

@@ -159,6 +159,10 @@ public class TestProject {
         return project("independent-versions");
     }
 
+    public static TestProject versionReportProject() {
+        return project("version-report");
+    }
+
     public static TestProject parentAsSibilngProject() {
         return project("parent-as-sibling");
     }

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.github.danielflower.mavenplugins.testprojects.independentversions</groupId>
+    <artifactId>independent-versions</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <modules>
+        <module>core-utils</module>
+        <module>console-app</module>
+    </modules>
+    <packaging>pom</packaging>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.danielflower.mavenplugins</groupId>
+                <artifactId>multi-module-maven-release-plugin</artifactId>
+                <version>${current.plugin.version}</version>
+                <configuration>
+                    <versionReports>
+                        <versionReport>
+                            <versionsReportFilePath>released-report.txt</versionsReportFilePath>
+                            <versionsReportFormat>FLAT</versionsReportFormat>
+                            <releasedModulesOnly>true</releasedModulesOnly>
+                        </versionReport>
+                        <versionReport>
+                            <versionsReportFilePath>released-report.json</versionsReportFilePath>
+                            <versionsReportFormat>JSON</versionsReportFormat>
+                            <releasedModulesOnly>true</releasedModulesOnly>
+                        </versionReport>
+                        <versionReport>
+                            <versionsReportFilePath>version-report.json</versionsReportFilePath>
+                            <versionsReportFormat>JSON</versionsReportFormat>
+                            <releasedModulesOnly>false</releasedModulesOnly>
+                        </versionReport>
+                    </versionReports>
+                    <releaseGoals>
+                        <releaseGoal>install</releaseGoal>
+                    </releaseGoals>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
