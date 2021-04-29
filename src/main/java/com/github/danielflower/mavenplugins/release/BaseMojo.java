@@ -162,6 +162,13 @@ public abstract class BaseMojo extends AbstractMojo {
     @Parameter(property = "arguments")
     public String arguments;
 
+    /**
+     * <p>Determines the separator between artifactId and groupId<p>
+     * <p>By default, set to '-'</p>
+     */
+    @Parameter(alias = "tagNameSeparator", required = false, readonly = true, defaultValue = "-", property = "tagNameSeparator")
+    protected String tagNameSeparator;
+ 
     final void setSettings(final Settings settings) {
 		this.settings = settings;
 	}

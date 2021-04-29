@@ -18,7 +18,7 @@ class AnnotatedTagFinder {
         this.versionNamer = versionNamer;
     }
 
-    List<AnnotatedTag> tagsForVersion(Git git, String module, String versionWithoutBuildNumber) throws MojoExecutionException {
+	List<AnnotatedTag> tagsForVersion(Git git, String module, String versionWithoutBuildNumber, String tagNameSeparator) throws MojoExecutionException {
         ArrayList<AnnotatedTag> results = new ArrayList<AnnotatedTag>();
         List<Ref> tags;
         try {
@@ -27,7 +27,7 @@ class AnnotatedTagFinder {
             throw new MojoExecutionException("Error while getting a list of tags in the local repo", e);
         }
         Collections.reverse(tags);
-        String tagWithoutBuildNumber = module + "-" + versionWithoutBuildNumber;
+        String tagWithoutBuildNumber = module + tagNameSeparator + versionWithoutBuildNumber;
         for (Ref tag : tags) {
             if (isPotentiallySameVersionIgnoringBuildNumber(tagWithoutBuildNumber, tag.getName())) {
                 try {

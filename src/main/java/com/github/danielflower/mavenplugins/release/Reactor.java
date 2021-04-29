@@ -28,7 +28,7 @@ public class Reactor {
         return modulesInBuildOrder;
     }
 
-    public static Reactor fromProjects(Log log, LocalGitRepo gitRepo, MavenProject rootProject, List<MavenProject> projects, Long buildNumber, List<String> modulesToForceRelease, NoChangesAction actionWhenNoChangesDetected, ResolverWrapper resolverWrapper, VersionNamer versionNamer) throws ValidationException, GitAPIException, MojoExecutionException {
+    public static Reactor fromProjects(Log log, LocalGitRepo gitRepo, MavenProject rootProject, List<MavenProject> projects, Long buildNumber, List<String> modulesToForceRelease, NoChangesAction actionWhenNoChangesDetected, ResolverWrapper resolverWrapper, VersionNamer versionNamer, String tagNameSeparator) throws ValidationException, GitAPIException, MojoExecutionException {
         DiffDetector detector = new TreeWalkingDiffDetector(gitRepo.git.getRepository());
         List<ReleasableModule> modules = new ArrayList<ReleasableModule>();
 
@@ -39,7 +39,7 @@ public class Reactor {
             String relativePathToModule = calculateModulePath(rootProject, project);
             String artifactId = project.getArtifactId();
             String versionWithoutBuildNumber = project.getVersion().replace("-SNAPSHOT", "");
-            List<AnnotatedTag> previousTagsForThisModule = annotatedTagFinder.tagsForVersion(gitRepo.git, artifactId, versionWithoutBuildNumber);
+            List<AnnotatedTag> previousTagsForThisModule = annotatedTagFinder.tagsForVersion(gitRepo.git, artifactId, versionWithoutBuildNumber, tagNameSeparator);
 
 
             Collection<Long> previousBuildNumbers = new ArrayList<Long>();
@@ -108,7 +108,7 @@ public class Reactor {
                     log.info("Will use version " + newVersion.releaseVersion() + " for " + artifactId + " as it has changed since the last release.");
                 }
             }
-            ReleasableModule module = new ReleasableModule(project, newVersion, equivalentVersion, relativePathToModule);
+            ReleasableModule module = new ReleasableModule(project, newVersion, equivalentVersion, relativePathToModule, tagNameSeparator);
             modules.add(module);
         }
 

@@ -11,13 +11,15 @@ public class ReleasableModule {
     private final String tagName;
     private final String equivalentVersion;
     private final String relativePathToModule;
+    private final String tagNameSeparator;
 
-    public ReleasableModule(MavenProject project, VersionName version, String equivalentVersion, String relativePathToModule) {
+	public ReleasableModule(MavenProject project, VersionName version, String equivalentVersion, String relativePathToModule, String tagNameSeparator) {
         this.project = project;
         this.version = version;
         this.equivalentVersion = equivalentVersion;
         this.relativePathToModule = relativePathToModule;
-        this.tagName = project.getArtifactId() + "-" + version.releaseVersion();
+        this.tagNameSeparator = tagNameSeparator;
+        this.tagName = project.getArtifactId() + tagNameSeparator + version.releaseVersion();
     }
 
     public String getTagName() {
@@ -71,6 +73,6 @@ public class ReleasableModule {
     }
 
     public ReleasableModule createReleasableVersion() {
-        return new ReleasableModule(project, version, null, relativePathToModule);
+        return new ReleasableModule(project, version, null, relativePathToModule, tagNameSeparator);
     }
 }

@@ -189,7 +189,11 @@ public class TestProject {
     public static TestProject differentDelimiterProject() {
         return project("different-delimiter");
     }
-
+    
+    public static TestProject inheritedVersionsFromParentWithTagNameSeparator() {
+		 return project("inherited-versions-from-parent-with-tag-name-separator");
+	}
+    
     public void setMvnRunner(MvnRunner mvnRunner) {
         this.mvnRunner = mvnRunner;
     }

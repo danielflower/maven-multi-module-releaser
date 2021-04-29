@@ -124,7 +124,7 @@ public class ReleaseMojo extends BaseMojo {
             repo.errorIfNotClean();
 
             ResolverWrapper resolverWrapper = new ResolverWrapper(factory, artifactResolver, remoteRepositories, localRepository);
-            Reactor reactor = Reactor.fromProjects(log, repo, project, projects, buildNumber, modulesToForceRelease, noChangesAction, resolverWrapper, versionNamer);
+            Reactor reactor = Reactor.fromProjects(log, repo, project, projects, buildNumber, modulesToForceRelease, noChangesAction, resolverWrapper, versionNamer, tagNameSeparator);
             if (reactor == null) {
                 return;
             }

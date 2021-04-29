@@ -26,9 +26,9 @@ public class AnnotatedTagFinderTest {
         AnnotatedTag tag2 = saveFileInModule(project, "core-utils", "2", 0);
         AnnotatedTag tag3 = saveFileInModule(project, "console-app", "1.2", 4);
 
-        assertThat(annotatedTagFinder.tagsForVersion(project.local, "console-app", "1.3"), hasSize(0));
-        assertThat(annotatedTagFinder.tagsForVersion(project.local, "console-app", "1.2"), containsInAnyOrder(tag1, tag3));
-        assertThat(annotatedTagFinder.tagsForVersion(project.local, "core-utils", "2"), contains(tag2));
+        assertThat(annotatedTagFinder.tagsForVersion(project.local, "console-app", "1.3", "-"), hasSize(0));
+        assertThat(annotatedTagFinder.tagsForVersion(project.local, "console-app", "1.2", "-"), containsInAnyOrder(tag1, tag3));
+        assertThat(annotatedTagFinder.tagsForVersion(project.local, "core-utils", "2", "-"), contains(tag2));
     }
 
     static AnnotatedTag saveFileInModule(TestProject project, String moduleName, String version, long buildNumber) throws IOException, GitAPIException {
@@ -58,7 +58,7 @@ public class AnnotatedTagFinderTest {
         AnnotatedTag tag1 = tagLocalRepo(project, "console-app-1.1.1.1", "1.1.1", 1);
         AnnotatedTag tag3 = tagLocalRepo(project, "console-app-1.1.1.3", "1.1.1", 3);
         AnnotatedTag tag2 = tagLocalRepo(project, "console-app-1.1.1.2", "1.1.1", 2);
-        List<AnnotatedTag> annotatedTags = annotatedTagFinder.tagsForVersion(project.local, "console-app", "1.1.1");
+        List<AnnotatedTag> annotatedTags = annotatedTagFinder.tagsForVersion(project.local, "console-app", "1.1.1", "-");
         assertThat(annotatedTags, containsInAnyOrder(tag1, tag2, tag3));
     }
 
