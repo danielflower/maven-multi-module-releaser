@@ -19,7 +19,7 @@ import static scaffolding.Photocopier.copyTestProjectToTemporaryLocation;
 public class TestProject {
 
     private static final MvnRunner defaultRunner = new MvnRunner(null);
-    private static final String PLUGIN_VERSION_FOR_TESTS = "3.2-SNAPSHOT";
+    private static final String PLUGIN_VERSION_FOR_TESTS = "3.3-SNAPSHOT";
 
     public final File originDir;
     public final Git origin;
@@ -72,6 +72,16 @@ public class TestProject {
         String modulePath = module.equals(".") ? "" : module + "/";
         local.add().addFilepattern(modulePath + random.getName()).call();
         local.commit().setMessage("Commit " + commitCounter.getAndIncrement() + ": adding " + random.getName()).call();
+        return this;
+    }
+
+    public TestProject checkoutBranch(String branch) throws GitAPIException {
+        local.checkout().setName(branch).call();
+        return this;
+    }
+
+    public TestProject createBranch(String branch) throws GitAPIException {
+        local.branchCreate().setName(branch).call();
         return this;
     }
 

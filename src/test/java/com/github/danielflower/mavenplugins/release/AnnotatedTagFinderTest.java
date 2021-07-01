@@ -22,17 +22,21 @@ public class AnnotatedTagFinderTest {
     public void findsTheLatestCommitWhereThereHaveBeenNoBranches() throws Exception {
         TestProject project = TestProject.independentVersionsProject();
 
-        AnnotatedTag tag1 = saveFileInModule(project, "console-app", "1.2", 3);
-        AnnotatedTag tag2 = saveFileInModule(project, "core-utils", "2", 0);
-        AnnotatedTag tag3 = saveFileInModule(project, "console-app", "1.2", 4);
+        saveFileInModuleAndTag(project, "console-app", "1.2", 3);
+        AnnotatedTag tag1 = saveFileInModuleAndTag(project, "core-utils", "2", 0);
+        AnnotatedTag tag2 = saveFileInModuleAndTag(project, "console-app", "1.2", 4);
 
         assertThat(annotatedTagFinder.tagsForVersion(project.local, "console-app", "1.3"), hasSize(0));
-        assertThat(annotatedTagFinder.tagsForVersion(project.local, "console-app", "1.2"), containsInAnyOrder(tag1, tag3));
-        assertThat(annotatedTagFinder.tagsForVersion(project.local, "core-utils", "2"), contains(tag2));
+        assertThat(annotatedTagFinder.tagsForVersion(project.local, "console-app", "1.2"), contains(tag2));
+        assertThat(annotatedTagFinder.tagsForVersion(project.local, "core-utils", "2"), contains(tag1));
     }
 
-    static AnnotatedTag saveFileInModule(TestProject project, String moduleName, String version, long buildNumber) throws IOException, GitAPIException {
+    static AnnotatedTag saveFileInModuleAndTag(TestProject project, String moduleName, String version, long buildNumber) throws IOException, GitAPIException {
         project.commitRandomFile(moduleName);
+        return tagCurrentCommit(project, moduleName, version, buildNumber);
+    }
+
+    static AnnotatedTag tagCurrentCommit(TestProject project, String moduleName, String version, long buildNumber) throws GitAPIException {
         String nameForTag = moduleName.equals(".") ? "root" : moduleName;
         return tagLocalRepo(project, nameForTag + "-" + version + versionNamer.getDelimiter() + buildNumber, version, buildNumber);
     }
@@ -54,12 +58,26 @@ public class AnnotatedTagFinderTest {
     @Test
     public void returnsMultipleTagsOnASingleCommit() throws IOException, GitAPIException, MojoExecutionException {
         TestProject project = TestProject.independentVersionsProject();
-        saveFileInModule(project, "console-app", "1.2", 1);
-        AnnotatedTag tag1 = tagLocalRepo(project, "console-app-1.1.1.1", "1.1.1", 1);
-        AnnotatedTag tag3 = tagLocalRepo(project, "console-app-1.1.1.3", "1.1.1", 3);
-        AnnotatedTag tag2 = tagLocalRepo(project, "console-app-1.1.1.2", "1.1.1", 2);
+        saveFileInModuleAndTag(project, "console-app", "1.2", 1);
+        AnnotatedTag tag1 = tagCurrentCommit(project, "console-app", "1.1.1", 1);
+        AnnotatedTag tag3 = tagCurrentCommit(project, "console-app", "1.1.1", 3);
+        AnnotatedTag tag2 = tagCurrentCommit(project, "console-app", "1.1.1", 2);
         List<AnnotatedTag> annotatedTags = annotatedTagFinder.tagsForVersion(project.local, "console-app", "1.1.1");
         assertThat(annotatedTags, containsInAnyOrder(tag1, tag2, tag3));
+    }
+
+    @Test
+    public void returnsOnlyTagsOfCurrentBranch() throws IOException, GitAPIException, MojoExecutionException {
+        TestProject project = TestProject.singleModuleProject();
+        AnnotatedTag tag1 = saveFileInModuleAndTag(project, ".", "1.0", 0);
+        project.createBranch("feature");
+        project.commitRandomFile(".");
+        AnnotatedTag tag2 = saveFileInModuleAndTag(project, ".", "1.0", 1);
+        project.checkoutBranch("feature");
+
+        List<AnnotatedTag> annotatedTags = annotatedTagFinder.tagsForVersion(project.local, "root", "1.0");
+
+        assertThat(annotatedTags, both(contains(tag1)).and(not(contains(tag2))));
     }
 
     @Test

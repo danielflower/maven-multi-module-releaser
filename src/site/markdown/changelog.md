@@ -1,6 +1,10 @@
 Changelog
 ---------
 
+### 3.3.0
+
+* Latest tagged version from current branch is used for unchanged modules [issue #118 for details](https://github.com/danielflower/multi-module-maven-release-plugin/issues/118)
+
 ### 3.2.0
 
 * Added support for processing version properties e.g. `<version>${foo.version}</version>`
